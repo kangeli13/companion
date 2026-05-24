@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Companion — Daily Insights for Diabetes and Hypertension</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f1e8;
+    --paper: #fdfaf3;
+    --ink: #2a2521;
+    --ink-soft: #6b6258;
+    --accent: #c66b3d;
+    --accent-deep: #8a4527;
+    --warn: #b03a2e;
+    --ok: #4f7847;
+    --line: #e8dfd0;
+    --shadow: 0 2px 24px rgba(58, 42, 28, 0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(198, 107, 61, 0.04) 0%, transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(79, 120, 71, 0.04) 0%, transparent 40%);
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
+  header {
+    margin-bottom: 48px;
+    text-align: center;
+  }
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    margin-bottom: 20px;
+  }
+  .logo::before, .logo::after {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent-deep);
+    opacity: 0.4;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 14px;
+    letter-spacing: -0.02em;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--accent-deep);
+    font-weight: 400;
+  }
+  .tagline {
+    font-size: 17px;
+    color: var(--ink-soft);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+  .card-label {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-label::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  textarea {
+    width: 100%;
+    min-height: 280px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+  textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .helper {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 10px;
+  }
+  .helper a {
+    color: var(--accent-deep);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .row {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  button {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 14px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    flex: 1;
+    min-width: 200px;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-deep);
+    transform: translateY(-1px);
+  }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .btn-secondary:hover {
+    border-color: var(--ink);
+  }
+  .results {
+    display: none;
+  }
+  .results.show {
+    display: block;
+  }
+  .danger-card {
+    border-left: 3px solid var(--warn);
+    background: #fdf2f0;
+  }
+  .danger-card .card-label::before { background: var(--warn); }
+  .danger-card .card-label { color: var(--warn); }
+  .ok-card .card-label::before { background: var(--ok); }
+  .ok-card .card-label { color: var(--ok); }
+  ul.findings {
+    list-style: none;
+    padding: 0;
+  }
+  ul.findings li {
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--line);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  ul.findings li:last-child { border-bottom: none; }
+  ul.findings li::before {
+    content: '—';
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .observation {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    line-height: 1.5;
+    font-weight: 400;
+    color: var(--ink);
+    padding: 8px 0;
+  }
+  .doctor-summary {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 18px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-top: 16px;
+    white-space: pre-wrap;
+  }
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 40px;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+  .loading.show { display: block; }
+  .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin: 0 3px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+  .error {
+    background: #fdf2f0;
+    color: var(--warn);
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 14px;
+    display: none;
+  }
+  .error.show { display: block; }
+  .disclaimer {
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 40px;
+    padding: 0 24px;
+    font-style: italic;
+  }
+  .api-key-section {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .api-key-section input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--paper);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    margin-top: 8px;
+  }
+  .api-key-section input:focus { outline: none; border-color: var(--accent); }
+  .api-key-section label {
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  @media (max-width: 600px) {
+    .wrap { padding: 32px 16px 60px; }
+    h1 { font-size: 32px; }
+    .card { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">Companion</div>
+    <h1>Make sense of your <em>daily readings</em>.</h1>
+    <p class="tagline">A quiet daily check-in for diabetes and blood pressure. Powered by Gemma 4 — your data stays in your browser.</p>
+  </header>
+
+  <div class="api-key-section">
+    <label for="apiKey">OpenRouter API key (one-time setup, stored only in this browser)</label>
+    <input type="password" id="apiKey" placeholder="sk-or-v1-..." />
+  </div>
+
+  <div class="card">
+    <div class="card-label">Your readings</div>
+    <textarea id="readings" placeholder="Paste or type your recent readings. Anything works — Companion reads it like a human would.
+
+Example:
+Mon: fasting 142, post-breakfast 198, BP 138/88
+Tue: fasting 135, post-lunch 215 after rice, BP 142/90, missed BP meds
+Wed: fasting 158, post-dinner 245, BP 151/95
+..."></textarea>
+    <p class="helper">Don't have data ready? <a id="loadSample">Load a sample week</a> to see how it works.</p>
+    <div class="row">
+      <button class="btn-primary" id="analyzeBtn">Analyze my week</button>
+      <button class="btn-secondary" id="clearBtn">Clear</button>
+    </div>
+    <div class="error" id="error"></div>
+  </div>
+
+  <div class="loading" id="loading">
+    Reading your week<span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <div class="results" id="results">
+    <div class="card danger-card" id="dangerCard" style="display:none;">
+      <div class="card-label">Needs attention now</div>
+      <ul class="findings" id="dangerList"></ul>
+    </div>
+
+    <div class="card ok-card" id="trendsCard">
+      <div class="card-label">What I noticed this week</div>
+      <ul class="findings" id="trendsList"></ul>
+    </div>
+
+    <div class="card">
+      <div class="card-label">One thing to try</div>
+      <p class="observation" id="observation"></p>
+    </div>
+
+    <div class="card">
+      <div class="card-label">For your next appointment</div>
+      <div class="doctor-summary" id="doctorSummary"></div>
+      <div class="row">
+        <button class="btn-primary" id="downloadBtn">Download PDF for my doctor</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="disclaimer">Companion is not medical advice. It helps you see patterns and prepare for conversations with your doctor.</p>
+</div>
+
+<script>
+const SAMPLE = `Day 1 (Mon, May 19)
+- Fasting glucose: 142 mg/dL
+- Post-breakfast glucose: 198 mg/dL (after toast + jam)
+- Evening BP: 138/88
+- Meds: Metformin taken, Amlodipine taken
+
+Day 2 (Tue, May 20)
+- Fasting glucose: 135 mg/dL
+- Post-lunch glucose: 215 mg/dL (after rice + chicken)
+- Evening BP: 142/90
+- Meds: Metformin taken, Amlodipine MISSED
+
+Day 3 (Wed, May 21)
+- Fasting glucose: 158 mg/dL
+- Post-dinner glucose: 245 mg/dL (after pasta + bread)
+- Evening BP: 151/95
+- Meds: Both taken
+
+Day 4 (Thu, May 22)
+- Fasting glucose: 128 mg/dL
+- Post-lunch glucose: 178 mg/dL (after salad + grilled fish)
+- Evening BP: 132/84
+- Meds: Both taken
+
+Day 5 (Fri, May 23)
+- Fasting glucose: 145 mg/dL
+- Post-breakfast glucose: 220 mg/dL (after cereal + juice)
+- Evening BP: 139/87
+- Meds: Both taken
+
+Day 6 (Sat, May 24)
+- Fasting glucose: 152 mg/dL
+- Post-dinner glucose: 268 mg/dL (after rice + curry)
+- Evening BP: 148/92
+- Meds: Both taken
+
+Day 7 (Sun, May 25)
+- Fasting glucose: 138 mg/dL
+- Post-lunch glucose: 195 mg/dL (after sandwich)
+- Evening BP: 135/85
+- Meds: Both taken`;
+
+const SYSTEM_PROMPT = `You are Companion — a warm, clear assistant helping someone manage Type 2 diabetes and hypertension. You analyze 7 days of their readings and give them gentle, specific, actionable insights.
+
+REFERENCE RANGES:
+- Fasting glucose: target 80-130 mg/dL, danger >250 or <70
+- Post-meal glucose (1-2h): target <180 mg/dL, danger >250
+- Blood pressure: target <130/80, danger >180/120 (systolic OR diastolic)
+
+YOUR JOB:
+1. Find any reading in the DANGER zone (call these out first, plainly)
+2. Spot trends across the week (food triggers, missed meds correlating with high readings, time-of-day patterns)
+3. Pick ONE specific, gentle thing they could try this week
+4. Write a clean clinical summary they can show their doctor
+
+OUTPUT FORMAT: Return ONLY valid JSON, no markdown, no backticks, no preamble. Use this exact schema:
+{
+  "danger_flags": ["string", ...],
+  "trends": ["string", ...],
+  "observation": "string",
+  "doctor_summary": "string"
+}
+
+TONE RULES:
+- Talk like a kind friend who happens to be a nurse, not a textbook
+- Use plain language: "your sugar after meals" not "postprandial glucose"
+- Reference SPECIFIC readings and days from their data
+- Never scold. Never moralize about food.
+- For danger_flags: be direct but calm. Example: "Sunday dinner pushed glucose to 268. That's high enough that I'd mention it to your doctor."
+- For trends: be specific. Example: "Rice meals on Tuesday and Saturday both pushed glucose over 215. Worth noticing."
+- For observation: ONE small, concrete experiment. Example: "Try cutting your rice portion in half on Wednesday and check your sugar two hours later."
+- For doctor_summary: clean, factual, clinical. Include: 7-day averages, any out-of-range readings with dates, missed medications, your top concern. Format as a paragraph a doctor can scan in 30 seconds.
+
+If the input data is missing or unparseable, return:
+{
+  "danger_flags": [],
+  "trends": [],
+  "observation": "I couldn't read your readings clearly. Try listing them by day with the actual numbers — for example: 'Mon: fasting 142, BP 138/88'.",
+  "doctor_summary": ""
+}`;
+
+const apiKeyInput = document.getElementById('apiKey');
+const readingsEl = document.getElementById('readings');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const clearBtn = document.getElementById('clearBtn');
+const loadSample = document.getElementById('loadSample');
+const loadingEl = document.getElementById('loading');
+const resultsEl = document.getElementById('results');
+const errorEl = document.getElementById('error');
+const dangerCard = document.getElementById('dangerCard');
+const dangerList = document.getElementById('dangerList');
+const trendsList = document.getElementById('trendsList');
+const observationEl = document.getElementById('observation');
+const doctorSummaryEl = document.getElementById('doctorSummary');
+const downloadBtn = document.getElementById('downloadBtn');
+
+// Persist API key locally
+const savedKey = localStorage.getItem('companion_or_key');
+if (savedKey) apiKeyInput.value = savedKey;
+apiKeyInput.addEventListener('change', () => {
+  localStorage.setItem('companion_or_key', apiKeyInput.value);
+});
+
+loadSample.addEventListener('click', () => { readingsEl.value = SAMPLE; });
+
+clearBtn.addEventListener('click', () => {
+  readingsEl.value = '';
+  resultsEl.classList.remove('show');
+  errorEl.classList.remove('show');
+});
+
+function showError(msg) {
+  errorEl.textContent = msg;
+  errorEl.classList.add('show');
+  loadingEl.classList.remove('show');
+  analyzeBtn.disabled = false;
+}
+
+async function analyze() {
+  errorEl.classList.remove('show');
+  resultsEl.classList.remove('show');
+
+  const key = apiKeyInput.value.trim();
+  const readings = readingsEl.value.trim();
+
+  if (!key) return showError('Please paste your OpenRouter API key first.');
+  if (!readings) return showError('Please paste your readings, or load the sample.');
+
+  analyzeBtn.disabled = true;
+  loadingEl.classList.add('show');
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'Companion'
+      },
+      body: JSON.stringify({
+        model: 'google/gemma-4-26b-a4b-it:free',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: `Here are my readings for the past 7 days:\n\n${readings}` }
+        ],
+        temperature: 0.3,
+        max_tokens: 1500
+      })
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`API error ${response.status}: ${text.slice(0, 200)}`);
+    }
+
+    const data = await response.json();
+    let content = data.choices?.[0]?.message?.content?.trim() || '';
+    // Strip any accidental code fences
+    content = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      // Try to find JSON inside the text
+      const match = content.match(/\{[\s\S]*\}/);
+      if (match) parsed = JSON.parse(match[0]);
+      else throw new Error('Model returned text I could not parse. Try again.');
+    }
+
+    render(parsed);
+  } catch (e) {
+    showError(e.message);
+  } finally {
+    loadingEl.classList.remove('show');
+    analyzeBtn.disabled = false;
+  }
+}
+
+function render(result) {
+  // Danger flags
+  if (result.danger_flags && result.danger_flags.length > 0) {
+    dangerCard.style.display = 'block';
+    dangerList.innerHTML = result.danger_flags.map(f => `<li>${escapeHtml(f)}</li>`).join('');
+  } else {
+    dangerCard.style.display = 'none';
+  }
+
+  // Trends
+  trendsList.innerHTML = (result.trends || []).map(t => `<li>${escapeHtml(t)}</li>`).join('') || '<li>No notable patterns this week.</li>';
+
+  // Observation
+  observationEl.textContent = result.observation || '';
+
+  // Doctor summary
+  doctorSummaryEl.textContent = result.doctor_summary || '';
+
+  resultsEl.classList.add('show');
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+downloadBtn.addEventListener('click', () => {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(18);
+  doc.text('Companion — Weekly Summary', 20, 25);
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(`Generated ${today}`, 20, 33);
+
+  doc.setTextColor(40);
+  let y = 50;
+
+  if (dangerCard.style.display !== 'none') {
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Needs attention:', 20, y);
+    y += 8;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    dangerList.querySelectorAll('li').forEach(li => {
+      const lines = doc.splitTextToSize('• ' + li.textContent, 170);
+      doc.text(lines, 20, y);
+      y += lines.length * 6 + 2;
+    });
+    y += 4;
+  }
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Trends this week:', 20, y);
+  y += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  trendsList.querySelectorAll('li').forEach(li => {
+    const lines = doc.splitTextToSize('• ' + li.textContent, 170);
+    doc.text(lines, 20, y);
+    y += lines.length * 6 + 2;
+  });
+  y += 6;
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Clinical summary:', 20, y);
+  y += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  const summaryLines = doc.splitTextToSize(doctorSummaryEl.textContent, 170);
+  doc.text(summaryLines, 20, y);
+  y += summaryLines.length * 6 + 10;
+
+  doc.setFontSize(9);
+  doc.setTextColor(120);
+  doc.text('This summary was generated locally by Companion using Google Gemma 4.', 20, 285);
+  doc.text('It is not medical advice. Please review with the patient.', 20, 290);
+
+  doc.save(`companion-summary-${today.replace(/\s/g, '-')}.pdf`);
+});
+
+analyzeBtn.addEventListener('click', analyze);
+</script>
+</body>
+</html>
